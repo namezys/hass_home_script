@@ -70,7 +70,7 @@ class Loader:
 
     def _load_main_package(self):
         _LOGGER.info("Load main module")
-        module_path = pathlib.Path(inspect.getfile(Loader)) / ".." / "scripts" / "home_script" / "__init__.py"
+        module_path = pathlib.Path(inspect.getfile(Loader)) / ".." / "home_script" / "__init__.py"
         module_path = module_path.resolve()
         _LOGGER.debug("Main module path: %s", module_path)
         assert module_path.is_file(), f"Invalid module path {module_path}"
@@ -144,7 +144,6 @@ async def load_all_script(hass: core.HomeAssistant, delay: int):
     loader = Loader(hass)
     loader.load()
     _LOGGER.debug("Load completed")
-    loader.unload()
 
 
 def create_listener(hass: core.HomeAssistant):
