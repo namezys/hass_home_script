@@ -1,0 +1,10 @@
+{
+  "codeowners": ["@namezys"],
+  "documentation": "https://github.com/user/home_script/",
+  "domain": "home_script",
+  "name": "Home Script",
+  "version": "0.5.0",
+  "loggers": ["home_script"],
+  "config_flow": false,
+  "requirements": ["watchdog"],
+}
