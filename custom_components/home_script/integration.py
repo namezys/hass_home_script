@@ -9,11 +9,14 @@ import typing
 from logging import getLogger
 
 import attrs
-
 import const
 from homeassistant import core
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP, EVENT_CORE_CONFIG_UPDATE
+from homeassistant.const import (EVENT_CORE_CONFIG_UPDATE,
+                                 EVENT_HOMEASSISTANT_STARTED,
+                                 EVENT_HOMEASSISTANT_STOP)
+
 from .entity import ScriptEntity, StatusEntity
+from .helpers import generate_stub_files
 from .scripts_watch_dog import ScriptWatchDog
 
 _LOGGER = getLogger(__name__)
@@ -85,6 +88,7 @@ class HomeScriptIntegration:
     @core.callback
     def _hass_started_listener(self, _event: core.Event):
         _LOGGER.debug("HASS started. Plan to load home script")
+        generate_stub_files(self.script_dir)
         self._plan_load_task()
 
     @core.callback
