@@ -1,1 +1,21 @@
 DOMAIN = "home_script"
+
+STATUS_ENTITY_ID = f"{DOMAIN}.{DOMAIN}"
+
+STATUS_ERROR = "error"
+STATUS_INVALID = "invalid"
+STATUS_LOADING = "loading"
+STATUS_NO_SCRIPTS = "no_scripts"
+STATUS_RUN = "run"
+STATUS_STOPPED = "stopped"
+STATUS_WAITING = "waiting"
+
+STATUS_SET = {
+    STATUS_ERROR,
+    STATUS_INVALID,
+    STATUS_LOADING,
+    STATUS_NO_SCRIPTS,
+    STATUS_RUN,
+    STATUS_STOPPED,
+    STATUS_WAITING,
+}
