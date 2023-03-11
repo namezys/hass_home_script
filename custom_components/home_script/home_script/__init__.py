@@ -66,7 +66,7 @@ class HomeScript:
     input_numbers: ComponentEntities[InputNumber]
     input_selects: ComponentEntities[InputSelect]
     counter: ComponentEntities[Counter]
-    lights: ProxyComponentEntities[LightEntity]
+    lights: ProxyComponentEntities[ProxyLightEntity]
     switches: ComponentEntities[SwitchEntity]
 
     @staticmethod

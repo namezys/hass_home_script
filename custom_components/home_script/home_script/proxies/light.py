@@ -78,7 +78,7 @@ class ParamAction(Action):
     @classmethod
     def create(cls: type[T], bound_method, arguments: set[str]) -> T:
         is_method, args = utils.function_or_method_and_params(bound_method, skip_kwargs=False)
-        assert args == ("kwargs",), "Unexpected method"
+        assert args == ("kwargs",), f"Unexpected method with args {args}"
         assert is_method, "Expect only method"
         instance = getattr(bound_method, "__self__")
         assert instance, "Method without instance"

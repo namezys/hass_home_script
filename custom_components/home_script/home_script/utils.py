@@ -9,7 +9,7 @@ __all__ = (
 
 def function_or_method_and_params(func_or_method: typing.Callable, skip_kwargs: bool = True) -> tuple[bool, tuple[str]]:
     signature = inspect.signature(func_or_method)
-    skip_set = {"args", } if skip_kwargs else {"args", "kwargs"}
+    skip_set = {} if skip_kwargs else {"args", "kwargs"}
     params = tuple(i for i in signature.parameters if i not in skip_set)
     is_method = bool(params) and "self" == params[0]
     if is_method:
