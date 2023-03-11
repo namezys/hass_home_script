@@ -9,12 +9,12 @@ import typing
 from logging import getLogger
 
 import attrs
-import const
 from homeassistant import core
 from homeassistant.const import (EVENT_CORE_CONFIG_UPDATE,
                                  EVENT_HOMEASSISTANT_STARTED,
                                  EVENT_HOMEASSISTANT_STOP)
 
+from . import const
 from .entity import ScriptEntity, StatusEntity
 from .helpers import generate_stub_files
 from .scripts_watch_dog import ScriptWatchDog
@@ -239,6 +239,10 @@ class HomeScriptIntegration:
             _LOGGER.info("Stop and unload home script")
             self.watch_dog.stop()
 
+            if self._main_module is None:
+                _LOGGER.info("Modules was not loaded. Skip unload")
+                self.is_loaded = False
+                return
             _LOGGER.info("Unload loaded scripts and home_script module")
             self._main_module.unload()
             self._main_module = None
