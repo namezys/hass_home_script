@@ -135,11 +135,13 @@ class ProxyLightEntity(Entity):
         self.turn_off = TurnOffAction.create(self._async_turn_off, self._turn_off_arguments)
 
     def __str__(self):
-        return f"proxy[{self._entity}]"
+        return f"@{self._entity}"
 
     async def _async_turn_on(self, **kwargs):
         _, kwargs = self._validate_turn_on_arguments((), kwargs)
         return await self._entity.async_turn_on(**kwargs)
+
+    _async_turn_on.__qualname__ = "turn_on"
 
     def _validate_turn_on_arguments(self, args: tuple, kwargs: dict) -> tuple[tuple, dict]:
         _LOGGER.debug("Validate turn on arguments")
@@ -165,6 +167,8 @@ class ProxyLightEntity(Entity):
     async def _async_turn_off(self, **kwargs):
         _, kwargs = self._validate_turn_off_arguments((), kwargs)
         return await self._entity.async_turn_off(**kwargs)
+
+    _async_turn_off.__qualname__ = "turn_off"
 
     def _validate_turn_off_arguments(self, args: tuple, kwargs: dict) -> type[tuple, dict]:
         _LOGGER.debug("Validate turn off arguments")

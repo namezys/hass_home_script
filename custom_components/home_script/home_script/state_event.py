@@ -35,7 +35,7 @@ class StateEvent:
             raise ValueError(f"{value} is not compatible with state event")
 
     def __str__(self):
-        result = f"state event of {self.entity_id}"
+        result = f"state event of `{self.entity_id}`"
         if self.condition is not None:
             return f"{result} with {self.condition}"
         return result
@@ -61,7 +61,7 @@ def old_state_condition(acceptable_state: str, *args: str) -> Condition:
     def _condition(entity_id: str, old: core.State, new: core.State):  # noqa
         return old.state in state_set
 
-    _condition.__name__ = f"old_states[{', '.join(sorted(state_set))}]"
+    _condition.__name__ = f"old_states[{', '.join(repr(i) for i in sorted(state_set))}]"
     _condition.__qualname__ = _condition.__name__
     return state_event_condition(_condition)
 
@@ -72,7 +72,7 @@ def new_state_condition(acceptable_state: str, *args: str) -> Condition:
     def _condition(entity_id: str, old: core.State, new: core.State):  # noqa
         return new.state in state_set
 
-    _condition.__name__ = f"new_states[{', '.join(sorted(state_set))}]"
+    _condition.__name__ = f"new_states[{', '.join(repr(i) for i in sorted(state_set))}]"
     _condition.__qualname__ = _condition.__name__
     return state_event_condition(_condition)
 

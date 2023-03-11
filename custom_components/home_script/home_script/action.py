@@ -58,7 +58,8 @@ class Function:
             of_str = f"[{self.instance}]"
         elif isinstance(self.function, types.MethodType):
             of_str = f"[{self.function.__self__}]"
-        return f"{self.function.__qualname__}({', '.join(self.arguments)}){of_str}"
+        # return f"{self.function.__qualname__}({', '.join(self.arguments)}){of_str}"
+        return f"{self.function.__qualname__}{of_str}"
 
     def run(self, act: "Action"):
         args, kwargs = self.args(act)
@@ -100,7 +101,7 @@ class Action(typing.Generic[T]):
 
     def _arg_str(self):
         args_str = ", ".join(str(i) for i in self.args)
-        kwargs_str = ", ".join(f"{k}={v!r}" for k, v in self.kwargs.items())
+        kwargs_str = ", ".join(f"{k}={v!r}" for k, v in self.kwargs.items() if v is not None)
         if args_str and kwargs_str:
             return args_str + ", " + kwargs_str
         return args_str + kwargs_str

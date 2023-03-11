@@ -48,7 +48,7 @@ class ModuleEntity(Entity):
 
     def __init__(self, hass: core.HomeAssistant, script_name: str):
         self.hass = hass
-        self.entity_id = f"{const.DOMAIN}.module_{script_name}"
+        self.entity_id = f"{const.DOMAIN}.custom_module_{script_name}"
         self._attr_name = f"Custom home script module {script_name}"
 
     def set_status(self, status: str):

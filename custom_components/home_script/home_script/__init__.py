@@ -128,6 +128,8 @@ def unload():
     home_script = None
 
 
-def get_logger(name):
+def get_logger(name: str):
     global logger_name
-    return getLogger(logger_name + ".scripts." + name)
+    if name.startswith("home_script."):
+        return getLogger(name)
+    return getLogger(logger_name + ".custom_module." + name)

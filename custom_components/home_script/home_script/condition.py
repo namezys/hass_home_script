@@ -143,8 +143,8 @@ class FuncCondition(Condition):
 
     def __str__(self):
         invert_str = 'not ' if self.is_inverted else ''
-        args_str = ', '.join(sorted(self.arguments)) if self.arguments is not None else '*'
-        result = f"condition {invert_str}{self.function.__qualname__}({args_str})"
+        # args_str = ', '.join(sorted(self.arguments)) if self.arguments is not None else '*'
+        result = f"condition {invert_str}{self.function.__qualname__}"
         if self.instance is not None:
             of_str = f" of {self.instance}"
         elif isinstance(self.function, types.MethodType):
@@ -155,8 +155,8 @@ class FuncCondition(Condition):
 
     def short_str(self):
         invert_str = 'NOT ' if self.is_inverted else ''
-        args_str = ', '.join(sorted(self.arguments)) if self.arguments is not None else '*'
-        result = f"{invert_str}{self.function.__qualname__}({args_str})"
+        # args_str = ', '.join(sorted(self.arguments)) if self.arguments is not None else '*'
+        result = f"{invert_str}{self.function.__qualname__}"
         if self.instance is not None:
             of_str = f" of {self.instance}"
         elif isinstance(self.function, types.MethodType):

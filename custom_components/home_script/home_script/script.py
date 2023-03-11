@@ -32,7 +32,12 @@ class Script:
             args.append("stopped")
         if self.tasks:
             args.append(f"running tasks {len(self.tasks)}")
-        return f"script {self.name} ({', '.join(args)})"
+        result = f"script {self.name}"
+        if self.is_stopped:
+            result += " stopped"
+        if self.tasks:
+            result += f" with running tasks: {', '.join(i.get_name() for i in self.tasks)}"
+        return result
 
     def stop(self):
         """
@@ -77,6 +82,7 @@ class Script:
 
         _LOGGER.debug("Plan %s", action)
         task = self.hass.async_create_task(_task())
+        task.set_name(str(action))
         self._add_task(task)
 
     @staticmethod

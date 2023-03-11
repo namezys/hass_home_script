@@ -24,6 +24,8 @@ _LOGGER = getLogger(__name__)
 LOAD_DELAY_S = 1
 SCRIPT_SUFFIX = (".py", ".Py", ".pY", ".PY")
 
+CUSTOM_MODULE_PREFIX = "home_script.custom_module."
+
 
 def _script_dir(hass: core.HomeAssistant) -> pathlib.Path:
     assert hass.config.config_dir, "Unknown config director"
@@ -195,7 +197,7 @@ class HomeScriptIntegration:
 
     def _load_script(self, path: pathlib.Path):
         _LOGGER.debug("Load %s into %s", path, self)
-        module_name = path.with_suffix("").name
+        module_name = CUSTOM_MODULE_PREFIX + path.with_suffix("").name
         self._set_script_entity_status(module_name, const.STATUS_LOADING)
         # noinspection PyBroadException
         try:
@@ -226,7 +228,8 @@ class HomeScriptIntegration:
         try:
             entity = self._module_entities.get(script_name)
             if entity is None:
-                entity = ModuleEntity(self.hass, script_name)
+                assert script_name.startswith(CUSTOM_MODULE_PREFIX), "Unexpected script name"
+                entity = ModuleEntity(self.hass, script_name[len(CUSTOM_MODULE_PREFIX):])
                 self._module_entities[script_name] = entity
             entity.set_status(status)
         except Exception:

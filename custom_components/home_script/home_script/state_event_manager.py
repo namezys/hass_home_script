@@ -9,6 +9,7 @@ from .script import Script
 from .state_event import StateEvent
 
 _LOGGER = getLogger(__name__)
+_LOGGER_TRACE = getLogger(__name__ + ".trace")
 
 
 @attrs.define
@@ -49,12 +50,15 @@ class StateChangedManager:
         entity_state_triggers = self.entity_state_triggers.get(entity_id, [])
         for state_event, script, action in entity_state_triggers:
             if self._test_state_event(state_event, entity_id, old, new):
-                action_plan.setdefault(script, []).append(action)
+                action_plan.setdefault(script, []).append((state_event, action))
         _LOGGER.debug("Found %s script", len(action_plan))
         for script, action_list in action_plan.items():
             _LOGGER.debug("Run actions on %s", script)
             script.cancel_all_tasks()
-            for action in action_list:
+            for (state_event, action) in action_list:
+                _LOGGER.info("TRACE: %s", state_event)
+                _LOGGER.info("TRACE: %s", script)
+                _LOGGER.info("TRACE: %s", action)
                 script.run_action(action)
         _LOGGER.debug("Finish processing of state event")
 
