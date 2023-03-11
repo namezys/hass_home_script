@@ -36,20 +36,20 @@ class StatusEntity(Entity):
         return {}
 
 
-class ScriptEntity(Entity):
+class ModuleEntity(Entity):
     """
     Status of each script.
 
     Entity is exists only for existing scripts
     """
 
-    _attr_name = "Home Script"
+    _attr_name = "Home Script Module"
     _status = const.STATUS_INVALID
 
     def __init__(self, hass: core.HomeAssistant, script_name: str):
         self.hass = hass
-        self.entity_id = f"{const.DOMAIN}.script_{script_name}"
-        self._attr_name = f"Custom script {script_name}"
+        self.entity_id = f"{const.DOMAIN}.module_{script_name}"
+        self._attr_name = f"Custom home script module {script_name}"
 
     def set_status(self, status: str):
         assert status in [const.STATUS_LOADING, const.STATUS_ERROR, const.STATUS_RUN, const.STATUS_STOPPED], \

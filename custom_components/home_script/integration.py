@@ -15,7 +15,7 @@ from homeassistant.const import (EVENT_CORE_CONFIG_UPDATE,
                                  EVENT_HOMEASSISTANT_STOP)
 
 from . import const
-from .entity import ScriptEntity, StatusEntity
+from .entity import ModuleEntity, StatusEntity
 from .helpers import generate_stub_files
 from .scripts_watch_dog import ScriptWatchDog
 
@@ -52,8 +52,8 @@ class HomeScriptIntegration:
     _listeners: list[core.CALLBACK_TYPE] = attrs.field(factory=list)
     _load_task: asyncio.Task | None = None
     _main_module: types.ModuleType | None = None
-    _script_modules: dict[str, types.ModuleType] = attrs.field(factory=dict)
-    _script_entities: dict[str, ScriptEntity] = attrs.field(factory=dict)
+    _custom_modules: dict[str, types.ModuleType] = attrs.field(factory=dict)
+    _module_entities: dict[str, ModuleEntity] = attrs.field(factory=dict)
 
     @staticmethod
     def create(hass: core.HomeAssistant):
@@ -200,7 +200,7 @@ class HomeScriptIntegration:
         # noinspection PyBroadException
         try:
             assert module_name != "home_script", "Module name can not be 'home_script'"
-            assert module_name not in self._script_modules, f"Script {module_name} is loaded"
+            assert module_name not in self._custom_modules, f"Script {module_name} is loaded"
             _LOGGER.debug("Module name %s", module_name)
             if module_name in sys.modules:
                 _LOGGER.debug("Module %s loaded", module_name)
@@ -215,7 +215,7 @@ class HomeScriptIntegration:
                 spec.loader.exec_module(module)
                 _LOGGER.debug("Module loaded successful")
             self._set_script_entity_status(module_name, const.STATUS_RUN)
-            self._script_modules[module_name] = module
+            self._custom_modules[module_name] = module
         except Exception:
             self._set_script_entity_status(module_name, const.STATUS_ERROR)
             _LOGGER.exception("Can not load module %s", module_name)
@@ -224,10 +224,10 @@ class HomeScriptIntegration:
         _LOGGER.debug("Set status of %s to %s", script_name, status)
         # noinspection PyBroadException
         try:
-            entity = self._script_entities.get(script_name)
+            entity = self._module_entities.get(script_name)
             if entity is None:
-                entity = ScriptEntity(self.hass, script_name)
-                self._script_entities[script_name] = entity
+                entity = ModuleEntity(self.hass, script_name)
+                self._module_entities[script_name] = entity
             entity.set_status(status)
         except Exception:
             _LOGGER.exception("Can not set script %s status %s", script_name, status)
@@ -257,10 +257,10 @@ class HomeScriptIntegration:
                 if module_path.startswith(str(self.script_dir) + "/"):
                     _LOGGER.debug("Unload %s: %s", key, module)
                     del sys.modules[key]
-                    if key in self._script_modules:
-                        self._script_modules.pop(key)
+                    if key in self._custom_modules:
+                        self._custom_modules.pop(key)
                         self._set_script_entity_status(key, const.STATUS_STOPPED)
-            assert not self._script_modules, f"Some modules not unloaded: {', '.join(sorted(self._script_modules))}"
+            assert not self._custom_modules, f"Some modules not unloaded: {', '.join(sorted(self._custom_modules))}"
             _LOGGER.debug("Everything is unloaded")
 
             _LOGGER.debug("Home script stopped")
