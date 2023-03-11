@@ -96,10 +96,10 @@ class HomeScript:
         normal_schema = schema.normalize_schema(event_schema)
         _LOGGER.debug("Add %s schema items", len(normal_schema))
         for event, action_list in normal_schema.items():
-            if isinstance(state_event, StateEvent):
+            if isinstance(event, StateEvent):
                 self._add_state_event_actions(event, schema_script, action_list)
             else:
-                raise AssertionError(f"Unknown event {event}")
+                raise AssertionError(f"Unknown event {event} of type {type(event)}. Expect {StateEvent}")
         _LOGGER.debug("Schema was added")
 
     def _add_state_event_actions(self, event: StateEvent, schema_script: Script, action_list: list[Action]):
