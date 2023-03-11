@@ -5,6 +5,7 @@ import typing
 from logging import getLogger
 
 import homeassistant.util.color as color_util
+import voluptuous as vol
 from homeassistant.components import light
 from homeassistant.components.light import LightEntity
 from homeassistant.helpers.entity import Entity
@@ -48,6 +49,9 @@ TURN_OFF_PARAMS = {
     light.ATTR_FLASH, light.ATTR_TRANSITION
 }
 
+TURN_ON_SCHEMA = vol.Schema(light.LIGHT_TURN_ON_SCHEMA)
+TURN_OFF_SCHEMA = vol.Schema(light.LIGHT_TURN_OFF_SCHEMA)
+
 
 def _light_turn_on_params(entity: LightEntity) -> set[str]:
     _LOGGER.debug("Get turn on params for %s", entity)
@@ -79,9 +83,9 @@ class ParamAction(Action):
     def create(cls: type[T], bound_method, arguments: set[str]) -> T:
         is_method, args = utils.function_or_method_and_params(bound_method, skip_kwargs=False)
         assert args == ("kwargs",), f"Unexpected method with args {args}"
-        assert is_method, "Expect only method"
+        assert not is_method, "Expect only bound method"
         instance = getattr(bound_method, "__self__")
-        assert instance, "Method without instance"
+        assert instance is not None, "Expect only bound instance"
         _, proxy_call_args = utils.function_or_method_and_params(cls.__call__, skip_kwargs=False)
         unsupported_args = arguments.difference(proxy_call_args)
         assert not unsupported_args, f"Requested arguments does not supported by proxy: {', '.join(unsupported_args)}"
@@ -141,7 +145,8 @@ class ProxyLightEntity(Entity):
         _LOGGER.debug("Validate turn on arguments")
         if args:
             raise ValueError("Position arguments are not allowed")
-        kwargs = light.LIGHT_TURN_ON_SCHEMA(kwargs)
+        kwargs = {i: v for i, v in kwargs.items() if v is not None}
+        kwargs = TURN_ON_SCHEMA(kwargs)
         unsupported_args = set(kwargs).difference(self._turn_on_arguments)
         if unsupported_args:
             raise ValueError(f"Unsupported arguments: {', '.join(sorted(unsupported_args))}")
@@ -165,7 +170,8 @@ class ProxyLightEntity(Entity):
         _LOGGER.debug("Validate turn off arguments")
         if args:
             raise ValueError("Position arguments are not allowed")
-        kwargs = light.LIGHT_TURN_OFF_SCHEMA(kwargs)
+        kwargs = {i: v for i, v in kwargs.items() if v is not None}
+        kwargs = TURN_OFF_SCHEMA(kwargs)
         unsupported_args = set(kwargs).difference(self._turn_off_arguments)
         if unsupported_args:
             raise ValueError(f"Unsupported arguments: {', '.join(sorted(unsupported_args))}")
