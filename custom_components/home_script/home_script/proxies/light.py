@@ -12,6 +12,7 @@ from homeassistant.helpers.entity import Entity
 
 from .. import utils
 from ..action import Action, Function
+from ..condition import Condition, property_condition
 
 _LOGGER = getLogger(__name__)
 
@@ -122,6 +123,8 @@ class TurnOffAction(ParamAction):
 class ProxyLightEntity(Entity):
     turn_on: TurnOnAction
     turn_off: TurnOffAction
+    is_on: Condition
+    is_off: Condition
 
     _entity: LightEntity
     _turn_on_arguments: set[str]
@@ -133,6 +136,8 @@ class ProxyLightEntity(Entity):
         self._turn_off_arguments = _light_turn_off_params(entity)
         self.turn_on = TurnOnAction.create(self._async_turn_on, self._turn_on_arguments)
         self.turn_off = TurnOffAction.create(self._async_turn_off, self._turn_off_arguments)
+        self.is_on = property_condition(self._entity, "is_on")
+        self.is_off = ~self.is_on
 
     def __str__(self):
         return f"@{self._entity}"
@@ -161,7 +166,19 @@ class ProxyLightEntity(Entity):
         color_name = kwargs.get(light.ATTR_COLOR_NAME)
         if color_name is not None:
             color_util.color_name_to_rgb(color_name)
-
+        # Only process params once we processed brightness step
+        if light.ATTR_BRIGHTNESS_STEP in kwargs:
+            _LOGGER.debug("Update brightness using step")
+            brightness = self._entity.brightness if self._entity.is_on and self._entity.brightness else 0
+            _LOGGER.debug("Base brightness %s and step %s", brightness, kwargs[light.ATTR_BRIGHTNESS_STEP])
+            brightness += kwargs.pop(light.ATTR_BRIGHTNESS_STEP)
+            kwargs[light.ATTR_BRIGHTNESS] = brightness
+        elif light.ATTR_BRIGHTNESS_STEP_PCT in kwargs:
+            _LOGGER.debug("Update brightness percent using step")
+            brightness = self._entity.brightness if self._entity.is_on and self._entity.brightness else 0
+            brightness += round(kwargs.pop(light.ATTR_BRIGHTNESS_STEP_PCT) / 100 * 255)
+            kwargs[light.ATTR_BRIGHTNESS] = brightness
+        light.preprocess_turn_on_alternatives(self._entity.hass, kwargs)
         return args, kwargs
 
     async def _async_turn_off(self, **kwargs):
@@ -180,3 +197,11 @@ class ProxyLightEntity(Entity):
         if unsupported_args:
             raise ValueError(f"Unsupported arguments: {', '.join(sorted(unsupported_args))}")
         return args, kwargs
+
+    @property
+    def brightness(self) -> int:
+        return self._entity.brightness
+
+    @property
+    def entity_id(self) -> str:
+        return self._entity.entity_id
