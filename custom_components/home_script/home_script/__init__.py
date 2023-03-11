@@ -11,7 +11,7 @@ from homeassistant.components.counter import Counter
 from homeassistant.components.input_boolean import InputBoolean
 from homeassistant.components.input_number import InputNumber
 from homeassistant.components.input_select import InputSelect
-from homeassistant.components.light import LightEntity
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.components.sun import Sun
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.helpers.entity import Entity
@@ -67,6 +67,7 @@ class HomeScript:
     input_selects: ComponentEntities[InputSelect]
     counter: ComponentEntities[Counter]
     lights: ProxyComponentEntities[ProxyLightEntity]
+    sensors: ComponentEntities[SensorEntity]
     switches: ComponentEntities[SwitchEntity]
 
     @staticmethod
@@ -82,6 +83,7 @@ class HomeScript:
             input_selects=ComponentEntities.load(hass, "input_select"),
             counter=ComponentEntities.load(hass, "counter"),
             lights=ProxyComponentEntities.load(hass, "light", ProxyLightEntity),
+            sensors=ComponentEntities.load(hass, "sensor"),
             switches=ComponentEntities.load(hass, "switch"),
         )
 
