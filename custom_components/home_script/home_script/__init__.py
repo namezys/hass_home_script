@@ -7,6 +7,7 @@ from logging import getLogger
 
 import attrs
 from homeassistant import core
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.components.counter import Counter
 from homeassistant.components.input_boolean import InputBoolean
 from homeassistant.components.input_number import InputNumber
@@ -21,7 +22,7 @@ from .bus_event import BusEvent, bus_event, bus_event_condition
 from .components import ComponentEntities, ProxyComponentEntities
 from .condition import Condition, ConditionValue, condition, property_condition
 from .home_object import HomeObject
-from .proxies.light import ProxyLightEntity
+from .proxies.light import ProxyLightEntity as LightEntity
 from .schema import EVENT_SCHEMA, normalize_schema
 from .script import Script, ScriptManager
 from .state_event import StateEvent, state_event, state_event_condition
@@ -53,6 +54,15 @@ __all__ = [
     "state_event",
 
     "format_schema",
+
+    "BinarySensorEntity",
+    "Counter",
+    "InputBoolean",
+    "InputNumber",
+    "InputSelect",
+    "LightEntity",
+    "SensorEntity",
+    "SwitchEntity",
 ]
 
 
@@ -62,11 +72,12 @@ class HomeScript:
     state_event_manager: StateChangedManager | None
     script_manager: ScriptManager
     sun: Sun
+    binary_sensors: ComponentEntities[BinarySensorEntity]
+    counter: ComponentEntities[Counter]
     input_booleans: ComponentEntities[InputBoolean]
     input_numbers: ComponentEntities[InputNumber]
     input_selects: ComponentEntities[InputSelect]
-    counter: ComponentEntities[Counter]
-    lights: ProxyComponentEntities[ProxyLightEntity]
+    lights: ProxyComponentEntities[LightEntity]
     sensors: ComponentEntities[SensorEntity]
     switches: ComponentEntities[SwitchEntity]
 
@@ -78,11 +89,12 @@ class HomeScript:
             state_event_manager=StateChangedManager.load(hass),
             script_manager=ScriptManager.load(hass),
             sun=hass.data['sun'],
+            binary_sensors=ComponentEntities.load(hass, "binary_sensor"),
+            counter=ComponentEntities.load(hass, "counter"),
             input_booleans=ComponentEntities.load(hass, "input_boolean"),
             input_numbers=ComponentEntities.load(hass, "input_number"),
             input_selects=ComponentEntities.load(hass, "input_select"),
-            counter=ComponentEntities.load(hass, "counter"),
-            lights=ProxyComponentEntities.load(hass, "light", ProxyLightEntity),
+            lights=ProxyComponentEntities.load(hass, "light", LightEntity),
             sensors=ComponentEntities.load(hass, "sensor"),
             switches=ComponentEntities.load(hass, "switch"),
         )
