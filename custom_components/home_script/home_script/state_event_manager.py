@@ -56,9 +56,10 @@ class StateChangedManager:
             _LOGGER.debug("Run actions on %s", script)
             script.cancel_all_tasks()
             for (state_event, action) in action_list:
-                _LOGGER.info("TRACE: %s", state_event)
-                _LOGGER.info("TRACE: %s", script)
-                _LOGGER.info("TRACE: %s", action)
+                _LOGGER.info("TRACE: =====================")
+                _LOGGER.info("TRACE: FOUND %s", state_event)
+                _LOGGER.info("TRACE: ON %s", script)
+                _LOGGER.info("TRACE: PERFORM %s", action)
                 script.run_action(action)
         _LOGGER.debug("Finish processing of state event")
 

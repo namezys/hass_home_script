@@ -237,6 +237,6 @@ def property_condition(instance, attr) -> Condition:
     def _f():
         return getattr(instance, attr)
 
-    _f.__name__ = f"property {attr}"
+    _f.__name__ = f"property {attr}[{instance}]"
     _f.__qualname__ = _f.__name__
     return condition(_f)
