@@ -12,11 +12,12 @@ from homeassistant.helpers.entity import Entity
 
 from .. import utils
 from ..action import Action, Function
-from ..condition import Condition, property_condition
+from ..condition import Condition, ConditionValue, property_condition
 
 _LOGGER = getLogger(__name__)
 
 T = typing.TypeVar('T')
+V = T | ConditionValue[T]
 
 MAIN_TURN_ON_PARAMS = (
     light.ATTR_EFFECT,
@@ -62,7 +63,7 @@ def _light_turn_on_params(entity: LightEntity) -> set[str]:
         _LOGGER.debug("Add all brightness params")
         turn_on_params.update(BRIGHTNESS_ATTRS)
     if turn_on_params.intersection(COLOR_TEMP_ATTRS):
-        _LOGGER.debug("Remove dedicated temp arguments")
+        _LOGGER.debug("Remove deprecated temp arguments")
         turn_on_params.difference_update(COLOR_TEMP_ATTRS)
         turn_on_params.add(light.ATTR_COLOR_TEMP_KELVIN)
 
@@ -98,7 +99,7 @@ class TurnOnAction(ParamAction):
     def __call__(self, /, profile: str = None,
                  effect: str = None, flash: str = None, transition: float = None,
 
-                 brightness: int = None, brightness_pct: int = None, white: int = None,
+                 brightness: int = None, brightness_pct: V[int] = None, white: int = None,
                  brightness_step: int = None, brightness_step_pct: int = None,
 
                  color_temp_kelvin: int = None,
@@ -144,7 +145,13 @@ class ProxyLightEntity(Entity):
 
     async def _async_turn_on(self, **kwargs):
         _, kwargs = self._validate_turn_on_arguments((), kwargs)
-        return await self._entity.async_turn_on(**kwargs)
+        _LOGGER.debug("Turn on %s with args %s", self._entity, kwargs)
+        return await self._entity.hass.services.async_call(
+            "light",
+            light.SERVICE_TURN_ON,
+            kwargs | {"entity_id": self._entity.entity_id},
+            blocking=True,
+        )
 
     _async_turn_on.__qualname__ = "turn_on"
 
@@ -166,24 +173,16 @@ class ProxyLightEntity(Entity):
         color_name = kwargs.get(light.ATTR_COLOR_NAME)
         if color_name is not None:
             color_util.color_name_to_rgb(color_name)
-        # Only process params once we processed brightness step
-        if light.ATTR_BRIGHTNESS_STEP in kwargs:
-            _LOGGER.debug("Update brightness using step")
-            brightness = self._entity.brightness if self._entity.is_on and self._entity.brightness else 0
-            _LOGGER.debug("Base brightness %s and step %s", brightness, kwargs[light.ATTR_BRIGHTNESS_STEP])
-            brightness += kwargs.pop(light.ATTR_BRIGHTNESS_STEP)
-            kwargs[light.ATTR_BRIGHTNESS] = brightness
-        elif light.ATTR_BRIGHTNESS_STEP_PCT in kwargs:
-            _LOGGER.debug("Update brightness percent using step")
-            brightness = self._entity.brightness if self._entity.is_on and self._entity.brightness else 0
-            brightness += round(kwargs.pop(light.ATTR_BRIGHTNESS_STEP_PCT) / 100 * 255)
-            kwargs[light.ATTR_BRIGHTNESS] = brightness
-        light.preprocess_turn_on_alternatives(self._entity.hass, kwargs)
         return args, kwargs
 
     async def _async_turn_off(self, **kwargs):
         _, kwargs = self._validate_turn_off_arguments((), kwargs)
-        return await self._entity.async_turn_off(**kwargs)
+        return await self._entity.hass.services.async_call(
+            "light",
+            light.SERVICE_TURN_OFF,
+            kwargs | {"entity_id": self._entity.entity_id},
+            blocking=True,
+        )
 
     _async_turn_off.__qualname__ = "turn_off"
 
