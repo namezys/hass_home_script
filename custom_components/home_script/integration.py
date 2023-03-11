@@ -244,12 +244,13 @@ class HomeScriptIntegration:
                 self.is_loaded = False
                 return
             _LOGGER.info("Unload loaded scripts and home_script module")
+            main_module_path = (pathlib.Path(self._main_module.__file__) / "..").resolve()
             self._main_module.unload()
             self._main_module = None
             _LOGGER.debug("Remove main module from cache")
             del sys.modules['home_script']
 
-            _LOGGER.debug("Remove dependent modules")
+            _LOGGER.debug("Remove submodules and dependent modules")
             for key, module in list(sys.modules.items()):
                 if not inspect.ismodule(module) or getattr(module, "__file__", None) is None:
                     continue
@@ -260,6 +261,9 @@ class HomeScriptIntegration:
                     if key in self._custom_modules:
                         self._custom_modules.pop(key)
                         self._set_script_entity_status(key, const.STATUS_STOPPED)
+                if module_path.startswith(str(main_module_path)):
+                    _LOGGER.debug("Unload submodule %s", key)
+                    del sys.modules[key]
             assert not self._custom_modules, f"Some modules not unloaded: {', '.join(sorted(self._custom_modules))}"
             _LOGGER.debug("Everything is unloaded")
 
