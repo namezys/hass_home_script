@@ -18,9 +18,10 @@ from homeassistant.helpers.entity import Entity
 
 from .action import Action, action, sleep
 from .bus_event import BusEvent, bus_event, bus_event_condition
-from .components import ComponentEntities
+from .components import ComponentEntities, ProxyComponentEntities
 from .condition import Condition, ConditionValue, condition, property_condition
 from .home_object import HomeObject
+from .proxies.light import ProxyLightEntity
 from .schema import EVENT_SCHEMA, normalize_schema
 from .script import Script, ScriptManager
 from .state_event import StateEvent, state_event, state_event_condition
@@ -57,6 +58,7 @@ __all__ = [
 
 @attrs.define
 class HomeScript:
+    hass: core.HomeAssistant
     state_event_manager: StateChangedManager | None
     script_manager: ScriptManager
     sun: Sun
@@ -64,13 +66,14 @@ class HomeScript:
     input_numbers: ComponentEntities[InputNumber]
     input_selects: ComponentEntities[InputSelect]
     counter: ComponentEntities[Counter]
-    lights: ComponentEntities[LightEntity]
+    lights: ProxyComponentEntities[LightEntity]
     switches: ComponentEntities[SwitchEntity]
 
     @staticmethod
     def load(hass: core.HomeAssistant) -> 'HomeScript':
         _LOGGER.debug("Load %s", HomeScript)
         return HomeScript(
+            hass=hass,
             state_event_manager=StateChangedManager.load(hass),
             script_manager=ScriptManager.load(hass),
             sun=hass.data['sun'],
@@ -78,7 +81,7 @@ class HomeScript:
             input_numbers=ComponentEntities.load(hass, "input_number"),
             input_selects=ComponentEntities.load(hass, "input_select"),
             counter=ComponentEntities.load(hass, "counter"),
-            lights=ComponentEntities.load(hass, "light"),
+            lights=ProxyComponentEntities.load(hass, "light", ProxyLightEntity),
             switches=ComponentEntities.load(hass, "switch"),
         )
 

@@ -39,3 +39,24 @@ class ComponentEntities(typing.Generic[EntityT]):
         if result is None:
             raise KeyError(f"Entity '{item}' not found")
         return result
+
+
+@attrs.define
+class ProxyComponentEntities(typing.Generic[EntityT]):
+    component_entity: ComponentEntities
+    proxy_cls: type
+    cache: dict[str, EntityT] = attrs.field(factory=dict)
+
+    @staticmethod
+    def load(hass: core.HomeAssistant, domain: str, proxy_cls: type):
+        return ProxyComponentEntities(
+            component_entity=ComponentEntities.load(hass, domain),
+            proxy_cls=proxy_cls
+        )
+
+    def __getitem__(self, item: str) -> EntityT:
+        if (proxy_entity := self.cache.get(item)) is None:
+            main_entity = self.component_entity[item]
+            proxy_entity = self.proxy_cls(main_entity)
+            self.cache[item] = proxy_entity
+        return proxy_entity
