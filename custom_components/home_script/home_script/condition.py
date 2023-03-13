@@ -71,7 +71,7 @@ class Condition:
 
 def _validate_filters(instance: Condition, _attribute, value):
     if len(value) < 2:
-        raise ValueError("Expect at least tow condition")
+        raise ValueError("Expect at least two condition")
     invalid_conditions = [i for i in value if not instance.is_compatible(i)]
     if invalid_conditions:
         raise ValueError(f"Invalid conditions: {', '.join(str(i) for i in invalid_conditions)}")
@@ -139,7 +139,7 @@ class FuncCondition(Condition):
     Independent condition that can be determinate without arguments
     """
     function: typing.Callable[[...], bool] | typing.Callable[[object, ...], bool] = attrs.field()
-    instance: object | None = None
+    instance: object | None = attrs.field(default=None, hash=False)
 
     def __str__(self):
         invert_str = 'not ' if self.is_inverted else ''
@@ -230,13 +230,45 @@ def condition(func) -> Condition:
     return condition_decorator_factory(None)(func)
 
 
-def property_condition(instance, attr) -> Condition:
-    if not hasattr(instance, attr):
-        raise ValueError(f"{instance} does not have attribute {attr}")
+@attrs.frozen(slots=True)
+class PropertyCondition(Condition):
+    property_name: str
+    instance: object = attrs.field(hash=False)
 
-    def _f():
-        return getattr(instance, attr)
+    def __str__(self):
+        return "condition " + self.short_str()
 
-    _f.__name__ = f"property {attr}[{instance}]"
-    _f.__qualname__ = _f.__name__
-    return condition(_f)
+    def short_str(self):
+        return f"{'not ' if self.is_inverted else ''}property {self.property_name}[{self.instance}]"
+
+    def _run(self, **kwargs) -> bool:
+        return getattr(self.instance, self.property_name)
+
+    def is_compatible(self, other: "Condition") -> bool:
+        return True
+
+
+@attrs.frozen(slots=True)
+class PropertyConditionDescriptor:
+    property_name: str
+
+    def __get__(self, instance: T | None, owner: type[T] = None):
+        if instance is None:
+            return self
+        return PropertyCondition(self.property_name, instance)
+
+    def __set__(self, instance, value):
+        raise ValueError(f"{self} can not be changed")
+
+    def __str__(self):
+        return f"condition property {self.property_name} of unbound instance"
+
+
+def property_condition(arg, attr_name: str = None) -> Condition:
+    if isinstance(arg, str):
+        if attr_name is not None:
+            raise ValueError("Invalid use of property condition")
+        return typing.cast(Condition, PropertyConditionDescriptor(arg))
+    if not attr_name:
+        raise ValueError(f"invalid property name {attr_name}")
+    return PropertyCondition(None, False, attr_name, arg)

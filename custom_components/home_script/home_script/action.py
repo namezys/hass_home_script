@@ -91,7 +91,7 @@ class Action(typing.Generic[T]):
     """
     functions: tuple[Function, ...]
     args: tuple = attrs.field(factory=tuple)
-    kwargs: dict = attrs.field(factory=dict)
+    kwargs: dict = attrs.field(factory=dict, hash=False)
 
     def __str__(self):
         async_str = "async " if self.is_async else ""
