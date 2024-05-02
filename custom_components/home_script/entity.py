@@ -3,7 +3,6 @@ from logging import getLogger
 
 from homeassistant import core
 from homeassistant.helpers.entity import Entity
-
 from . import const
 
 _LOGGER = getLogger(__name__)
@@ -17,6 +16,7 @@ class StatusEntity(Entity):
     _attr_name = "Home Script"
     _status = None
     entity_id = const.STATUS_ENTITY_ID
+    extra_state_attributes = {}
 
     def __init__(self, hass: core.HomeAssistant):
         self.hass = hass
@@ -31,10 +31,6 @@ class StatusEntity(Entity):
     def state(self) -> typing.Literal["invalid", "waiting", "loading", "run"]:
         return self._status
 
-    @property
-    def extra_state_attributes(self) -> dict[str, typing.Any]:
-        return {}
-
 
 class ModuleEntity(Entity):
     """
@@ -43,13 +39,13 @@ class ModuleEntity(Entity):
     Entity is exists only for existing scripts
     """
 
-    _attr_name = "Home Script Module"
+    _attr_name = None
     _status = const.STATUS_INVALID
 
     def __init__(self, hass: core.HomeAssistant, script_name: str):
         self.hass = hass
-        self.entity_id = f"{const.DOMAIN}.custom_module_{script_name}"
-        self._attr_name = f"Custom home script module {script_name}"
+        self.entity_id = f"{const.DOMAIN}.script_{script_name}"
+        self._attr_name = f"Script: {script_name}"
 
     def set_status(self, status: str):
         assert status in [const.STATUS_LOADING, const.STATUS_ERROR, const.STATUS_RUN, const.STATUS_STOPPED], \

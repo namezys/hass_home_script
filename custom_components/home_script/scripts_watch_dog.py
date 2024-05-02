@@ -4,10 +4,16 @@ from logging import getLogger
 import attrs
 import watchdog
 import watchdog.observers
+from watchdog.events import FileSystemEvent, FileSystemEventHandler, FileSystemMovedEvent
+
 from homeassistant import core
-from watchdog.events import FileSystemEvent, FileSystemEventHandler
 
 _LOGGER = getLogger(__name__)
+
+
+def _is_skip(path):
+    path = str(path)
+    return path.endswith("~") or "/__pycache__" in path
 
 
 class WatchDogHandler(FileSystemEventHandler):
@@ -17,7 +23,7 @@ class WatchDogHandler(FileSystemEventHandler):
     To avoid firing many event in case of consequence changes, collect events
     """
     hass: core.HomeAssistant
-    callback: typing.Callable | None = None
+    callback: typing.Callable[..., None] | None = None
 
     def __init__(self, hass: core.HomeAssistant):
         self.hass = hass
@@ -27,22 +33,31 @@ class WatchDogHandler(FileSystemEventHandler):
         _LOGGER.debug("Watchdog found change in directory with scripts: %s", event)
         callback = self.callback
         if callback:
+            # noinspection PyTypeChecker
             self.hass.add_job(self.callback)
 
     def on_modified(self, event: FileSystemEvent) -> None:
         """File modified."""
+        if _is_skip(event.src_path) or event.is_directory:
+            return
         self.process(event)
 
-    def on_moved(self, event: FileSystemEvent) -> None:
+    def on_moved(self, event: FileSystemMovedEvent) -> None:
         """File moved."""
+        if _is_skip(event.src_path) and _is_skip(event.dest_path):
+            return
         self.process(event)
 
     def on_created(self, event: FileSystemEvent) -> None:
         """File created."""
+        if _is_skip(event.src_path):
+            return
         self.process(event)
 
     def on_deleted(self, event: FileSystemEvent) -> None:
         """File deleted."""
+        if _is_skip(event.src_path):
+            return
         self.process(event)
 
 
